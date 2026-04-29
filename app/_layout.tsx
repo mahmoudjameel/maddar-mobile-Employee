@@ -75,6 +75,8 @@ function RootLayoutNav() {
       <Stack.Screen name="department" options={{ title: t("department.title") }} />
       <Stack.Screen name="team" options={{ title: t("team.title") }} />
       <Stack.Screen name="notifications" options={{ title: t("notifications.title") }} />
+      <Stack.Screen name="announcements" options={{ title: t("announcements.title") }} />
+      <Stack.Screen name="announcement/[id]" options={{ title: t("announcements.defaultName") }} />
       <Stack.Screen name="reports" options={{ title: t("reports.title") }} />
       <Stack.Screen name="settings" options={{ title: t("settings.title") }} />
     </Stack>

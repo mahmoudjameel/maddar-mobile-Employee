@@ -227,7 +227,31 @@
     "tasks": "مهام الموظف",
     "noTasks": "لا توجد مهام",
     "leaveRequests": "طلبات الإجازة",
-    "noLeaveRequests": "لا توجد طلبات إجازة"
+    "noLeaveRequests": "لا توجد طلبات إجازة",
+    "attendanceCalendar": "تقويم الحضور",
+    "noCalendar": "لا توجد سجلات حضور لهذا الشهر",
+    "assignTask": "إسناد مهمة جديدة",
+    "assignTaskTitle": "عنوان المهمة",
+    "assignTaskTitlePh": "أدخل عنوان المهمة",
+    "assignTaskDescription": "الوصف",
+    "assignTaskDescriptionPh": "تفاصيل اختيارية",
+    "assignTaskPriority": "الأولوية",
+    "assignTaskDueDate": "تاريخ الاستحقاق",
+    "assignTaskDueDatePh": "YYYY-MM-DD",
+    "assignTaskSubmit": "إسناد المهمة",
+    "assignTaskSuccess": "تم إسناد المهمة بنجاح",
+    "assignTaskError": "تعذّر إسناد المهمة",
+    "assignTaskTitleRequired": "عنوان المهمة مطلوب"
+  },
+  "announcements": {
+    "title": "الإعلانات",
+    "subtitle": "أحدث الإعلانات المنشورة لك",
+    "empty": "لا توجد إعلانات بعد",
+    "defaultName": "إعلان",
+    "pinned": "مثبت",
+    "viewed": "تمت قراءته",
+    "publishedAt": "تاريخ النشر",
+    "by": "بواسطة"
   },
   "settings": {
     "title": "الإعدادات",

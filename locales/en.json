@@ -227,7 +227,31 @@
     "tasks": "Employee Tasks",
     "noTasks": "No tasks",
     "leaveRequests": "Leave Requests",
-    "noLeaveRequests": "No leave requests"
+    "noLeaveRequests": "No leave requests",
+    "attendanceCalendar": "Attendance Calendar",
+    "noCalendar": "No attendance records for this month",
+    "assignTask": "Assign New Task",
+    "assignTaskTitle": "Task Title",
+    "assignTaskTitlePh": "Enter task title",
+    "assignTaskDescription": "Description",
+    "assignTaskDescriptionPh": "Optional details",
+    "assignTaskPriority": "Priority",
+    "assignTaskDueDate": "Due Date",
+    "assignTaskDueDatePh": "YYYY-MM-DD",
+    "assignTaskSubmit": "Assign Task",
+    "assignTaskSuccess": "Task assigned successfully",
+    "assignTaskError": "Could not assign task",
+    "assignTaskTitleRequired": "Task title is required"
+  },
+  "announcements": {
+    "title": "Announcements",
+    "subtitle": "Latest announcements published for you",
+    "empty": "No announcements yet",
+    "defaultName": "Announcement",
+    "pinned": "Pinned",
+    "viewed": "Viewed",
+    "publishedAt": "Published",
+    "by": "By"
   },
   "settings": {
     "title": "Settings",

@@ -30,6 +30,7 @@ export default function MoreScreen() {
     { label: t("more.department"), icon: "users", href: "/department" },
     { label: t("more.team"), icon: "user-check", href: "/team" },
     { label: t("more.notifications"), icon: "bell", href: "/notifications" },
+    { label: t("announcements.title"), icon: "radio", href: "/announcements" },
     { label: t("more.reports"), icon: "bar-chart-2", href: "/reports" },
     { label: t("more.settings"), icon: "settings", href: "/settings" },
   ];
