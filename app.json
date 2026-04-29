@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "Employee",
+    "slug": "maddar-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/ic_launcher.png",
+    "scheme": "maddar-mobile",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/login-logo.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.mralqahtani1988.maddarmobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/ic_launcher.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "favicon": "./assets/images/icon.png"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "origin": "https://replit.com/"
+        }
+      ],
+      "expo-font",
+      "expo-web-browser",
+      "expo-localization"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "74347e24-f4e7-420b-9cf7-234c69c1145b"
+      }
+    }
+  }
+}
