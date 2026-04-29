@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth";
 import { useIsRTL } from "@/lib/i18n-direction";
 import { changeLanguage } from "@/lib/i18n";
 import { alignStart, writeDir } from "@/lib/layout";
+import { ThemeMode, useThemeMode } from "@/lib/theme";
 
 function InfoCard({
   label,
@@ -173,14 +174,10 @@ export default function SettingsScreen() {
 
       <View style={{ flexDirection: rtl ? "row-reverse" : "row", gap: 12 }}>
         <InfoCard label={t("settings.accountType")} value={roleLabel} icon="user" />
-        <InfoCard
-          label={t("settings.appearance")}
-          value={t("settings.appearanceDefault")}
-          icon="smartphone"
-        />
+        <InfoCard label={t("settings.email")} value={me?.email || "—"} icon="mail" />
       </View>
 
-      <InfoCard label={t("settings.email")} value={me?.email || "—"} icon="mail" />
+      <ThemeSection />
 
       <Card style={{ gap: 10, alignSelf: "stretch" }}>
         <Text
@@ -236,5 +233,86 @@ export default function SettingsScreen() {
         </Text>
       </Card>
     </ScrollView>
+  );
+}
+
+function ThemeSection() {
+  const { t } = useTranslation();
+  const rtl = useIsRTL();
+  const { mode, setMode } = useThemeMode();
+
+  const options: Array<{ key: ThemeMode; label: string; icon: keyof typeof Feather.glyphMap }> = [
+    { key: "system", label: t("settings.themeSystem"), icon: "smartphone" },
+    { key: "light", label: t("settings.themeLight"), icon: "sun" },
+    { key: "dark", label: t("settings.themeDark"), icon: "moon" },
+  ];
+
+  return (
+    <Card style={{ gap: 12, alignSelf: "stretch" }}>
+      <Text
+        style={{
+          fontFamily: "Inter_700Bold",
+          fontSize: 16,
+          color: theme.foreground,
+          textAlign: alignStart(rtl),
+          writingDirection: writeDir(rtl),
+          width: "100%",
+        }}
+      >
+        {t("settings.appearance")}
+      </Text>
+      <View style={{ flexDirection: rtl ? "row-reverse" : "row", gap: 8 }}>
+        {options.map((opt) => {
+          const active = mode === opt.key;
+          return (
+            <Pressable
+              key={opt.key}
+              onPress={() => void setMode(opt.key)}
+              style={{ flex: 1 }}
+            >
+              <View
+                style={{
+                  alignItems: "center",
+                  paddingVertical: 14,
+                  paddingHorizontal: 8,
+                  borderWidth: 1,
+                  borderColor: active ? theme.primary : theme.border,
+                  borderRadius: 12,
+                  backgroundColor: active ? theme.secondary : theme.card,
+                  gap: 6,
+                }}
+              >
+                <Feather
+                  name={opt.icon}
+                  size={20}
+                  color={active ? theme.primary : theme.mutedForeground}
+                />
+                <Text
+                  style={{
+                    color: active ? theme.primary : theme.foreground,
+                    fontFamily: "Inter_600SemiBold",
+                    fontSize: 13,
+                  }}
+                >
+                  {opt.label}
+                </Text>
+              </View>
+            </Pressable>
+          );
+        })}
+      </View>
+      <Text
+        style={{
+          color: theme.mutedForeground,
+          fontSize: 12,
+          lineHeight: 18,
+          textAlign: alignStart(rtl),
+          writingDirection: writeDir(rtl),
+          width: "100%",
+        }}
+      >
+        {t("settings.themeHint")}
+      </Text>
+    </Card>
   );
 }

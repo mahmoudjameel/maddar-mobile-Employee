@@ -1,14 +1,18 @@
 import { Feather } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { Card, EmptyState, Loading, SectionHeader, styles as s, theme } from "@/components/UI";
+import { FilterChips } from "@/components/FilterChips";
+import { SearchBar } from "@/components/SearchBar";
 import { api } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
 import { useIsRTL } from "@/lib/i18n-direction";
 import { alignStart, writeDir } from "@/lib/layout";
+
+type AnnFilter = "all" | "pinned" | "unread";
 
 type Announcement = {
   id: string;
@@ -40,6 +44,22 @@ export default function AnnouncementsScreen() {
 
   const items = q.data || [];
 
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<AnnFilter>("all");
+
+  const filteredItems = useMemo(() => {
+    const qq = search.trim().toLowerCase();
+    return items.filter((a) => {
+      const pinned = Boolean(a.isPinned ?? a.pinned);
+      const viewed = Boolean(a.viewedAt);
+      if (filter === "pinned" && !pinned) return false;
+      if (filter === "unread" && viewed) return false;
+      if (!qq) return true;
+      const hay = `${a.title || ""} ${a.summary || ""} ${a.body || ""} ${a.authorName || ""}`.toLowerCase();
+      return hay.includes(qq);
+    });
+  }, [items, search, filter]);
+
   return (
     <ScrollView
       style={s.screen}
@@ -52,12 +72,31 @@ export default function AnnouncementsScreen() {
 
       {q.isLoading ? <Loading /> : null}
 
+      {items.length > 0 ? (
+        <>
+          <SearchBar value={search} onChangeText={setSearch} placeholder={t("common.search")} />
+          <FilterChips<AnnFilter>
+            value={filter}
+            onChange={setFilter}
+            options={[
+              { value: "all", label: t("common.all") },
+              { value: "pinned", label: t("announcements.pinned") },
+              { value: "unread", label: t("notifications.filterUnread") },
+            ]}
+          />
+        </>
+      ) : null}
+
       {!q.isLoading && items.length === 0 ? (
         <Card>
           <EmptyState icon="bell" title={t("announcements.empty")} />
         </Card>
+      ) : !q.isLoading && filteredItems.length === 0 ? (
+        <Card>
+          <EmptyState icon="search" title={t("common.noResults")} />
+        </Card>
       ) : (
-        items.map((a) => {
+        filteredItems.map((a) => {
           const pinned = Boolean(a.isPinned ?? a.pinned);
           const viewed = Boolean(a.viewedAt);
           return (

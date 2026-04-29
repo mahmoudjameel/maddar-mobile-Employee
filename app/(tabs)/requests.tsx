@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Pressable,
   RefreshControl,
@@ -22,10 +22,14 @@ import {
   styles as s,
   theme,
 } from "@/components/UI";
+import { FilterChips } from "@/components/FilterChips";
+import { SearchBar } from "@/components/SearchBar";
 import { api } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import { useIsRTL } from "@/lib/i18n-direction";
 import { alignStart, writeDir } from "@/lib/layout";
+
+type ReqFilter = "all" | "pending" | "approved" | "rejected";
 
 type RequestRow = {
   id: string;
@@ -79,6 +83,22 @@ export default function RequestsScreen() {
   const list = (tab === "mine" ? q.data?.mine : q.data?.inbox) || [];
   const mineCount = q.data?.mine?.length || 0;
   const inboxCount = q.data?.inbox?.length || 0;
+
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<ReqFilter>("all");
+
+  const filteredList = useMemo(() => {
+    const qq = search.trim().toLowerCase();
+    return list.filter((r) => {
+      const st = r.status || "";
+      if (filter === "pending" && !(st === "in_review" || st === "pending")) return false;
+      if (filter === "approved" && !(st === "approved" || st === "completed")) return false;
+      if (filter === "rejected" && !(st === "rejected" || st === "cancelled" || st === "returned")) return false;
+      if (!qq) return true;
+      const hay = `${r.typeName || ""} ${r.typeId || ""} ${r.id}`.toLowerCase();
+      return hay.includes(qq);
+    });
+  }, [list, search, filter]);
 
   return (
     <ScrollView
@@ -153,6 +173,22 @@ export default function RequestsScreen() {
         ))}
       </View>
 
+      {list.length > 0 ? (
+        <>
+          <SearchBar value={search} onChangeText={setSearch} placeholder={t("common.search")} />
+          <FilterChips<ReqFilter>
+            value={filter}
+            onChange={setFilter}
+            options={[
+              { value: "all", label: t("common.all") },
+              { value: "pending", label: t("requests.statusPending") },
+              { value: "approved", label: t("requests.statusApproved") },
+              { value: "rejected", label: t("requests.statusRejected") },
+            ]}
+          />
+        </>
+      ) : null}
+
       {q.isLoading ? (
         <Loading />
       ) : list.length === 0 ? (
@@ -163,8 +199,12 @@ export default function RequestsScreen() {
             subtitle={tab === "mine" ? t("home.noRequestsHint") : t("requests.awaitingMyReview")}
           />
         </Card>
+      ) : filteredList.length === 0 ? (
+        <Card style={{ alignSelf: "stretch" }}>
+          <EmptyState icon="search" title={t("common.noResults")} />
+        </Card>
       ) : (
-        list.map((r) => {
+        filteredList.map((r) => {
           const k = statusKey[r.status || ""];
           return (
             <Pressable key={r.id} onPress={() => router.push(`/request/${r.id}`)}>

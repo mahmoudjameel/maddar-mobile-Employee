@@ -1,13 +1,17 @@
 import { Feather } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { Card, EmptyState, Loading, SectionHeader, styles as s, theme } from "@/components/UI";
+import { FilterChips } from "@/components/FilterChips";
+import { SearchBar } from "@/components/SearchBar";
 import { api } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
 import { useIsRTL } from "@/lib/i18n-direction";
 import { alignStart, writeDir } from "@/lib/layout";
+
+type NotifFilter = "all" | "unread" | "read";
 
 type Notif = {
   id: string;
@@ -47,6 +51,20 @@ export default function NotificationsScreen() {
   const items = q.data || [];
   const unread = items.filter((n) => !n.readAt).length;
 
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<NotifFilter>("all");
+
+  const filteredItems = useMemo(() => {
+    const qq = search.trim().toLowerCase();
+    return items.filter((n) => {
+      if (filter === "unread" && n.readAt) return false;
+      if (filter === "read" && !n.readAt) return false;
+      if (!qq) return true;
+      const hay = `${n.title || ""} ${n.body || ""}`.toLowerCase();
+      return hay.includes(qq);
+    });
+  }, [items, search, filter]);
+
   return (
     <ScrollView
       style={s.screen}
@@ -80,12 +98,31 @@ export default function NotificationsScreen() {
 
       {q.isLoading ? <Loading /> : null}
 
+      {items.length > 0 ? (
+        <>
+          <SearchBar value={search} onChangeText={setSearch} placeholder={t("common.search")} />
+          <FilterChips<NotifFilter>
+            value={filter}
+            onChange={setFilter}
+            options={[
+              { value: "all", label: t("common.all") },
+              { value: "unread", label: t("notifications.filterUnread") },
+              { value: "read", label: t("notifications.filterRead") },
+            ]}
+          />
+        </>
+      ) : null}
+
       {items.length === 0 ? (
         <Card>
           <EmptyState icon="bell" title={t("notifications.empty")} />
         </Card>
+      ) : filteredItems.length === 0 ? (
+        <Card>
+          <EmptyState icon="search" title={t("common.noResults")} />
+        </Card>
       ) : (
-        items.map((n) => (
+        filteredItems.map((n) => (
           <Card
             key={n.id}
             style={{

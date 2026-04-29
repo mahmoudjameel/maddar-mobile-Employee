@@ -23,6 +23,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider } from "@/lib/auth";
 import { I18nDirectionProvider, useIsRTL } from "@/lib/i18n-direction";
 import i18n, { initI18n } from "@/lib/i18n";
+import { ThemeProvider, useThemeMode } from "@/lib/theme";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -102,12 +103,6 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, fontError, i18nReady]);
 
-  useEffect(() => {
-    if (Platform.OS !== "android") return;
-    NavigationBar.setBackgroundColorAsync(theme.card).catch(() => {});
-    NavigationBar.setButtonStyleAsync("dark").catch(() => {});
-  }, []);
-
   if ((!fontsLoaded && !fontError) || !i18nReady) return null;
 
   return (
@@ -119,8 +114,9 @@ export default function RootLayout() {
               <AuthProvider>
                 <GestureHandlerRootView>
                   <KeyboardProvider>
-                    <StatusBar style="dark" backgroundColor={theme.background} translucent={false} />
-                    <RootLayoutNav />
+                    <ThemeProvider>
+                      <ThemedShell />
+                    </ThemeProvider>
                   </KeyboardProvider>
                 </GestureHandlerRootView>
               </AuthProvider>
@@ -129,5 +125,28 @@ export default function RootLayout() {
         </SafeAreaProvider>
       </I18nDirectionProvider>
     </I18nextProvider>
+  );
+}
+
+function ThemedShell() {
+  const { resolved, palette } = useThemeMode();
+
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    NavigationBar.setBackgroundColorAsync(palette.card).catch(() => {});
+    NavigationBar.setButtonStyleAsync(resolved === "dark" ? "light" : "dark").catch(() => {});
+  }, [palette.card, resolved]);
+
+  return (
+    <>
+      <StatusBar
+        style={resolved === "dark" ? "light" : "dark"}
+        backgroundColor={palette.background}
+        translucent={false}
+      />
+      <View key={resolved} style={{ flex: 1, backgroundColor: palette.background }}>
+        <RootLayoutNav />
+      </View>
+    </>
   );
 }

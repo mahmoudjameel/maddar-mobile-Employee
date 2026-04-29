@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { Card, EmptyState, Loading, SectionHeader, styles as s, theme } from "@/components/UI";
+import { SearchBar } from "@/components/SearchBar";
 import { api } from "@/lib/api";
 import { useIsRTL } from "@/lib/i18n-direction";
 import { alignStart, writeDir } from "@/lib/layout";
@@ -27,6 +28,18 @@ export default function TeamScreen() {
     },
   });
 
+  const [search, setSearch] = useState("");
+
+  const employees = q.data?.employees || [];
+  const filteredEmployees = useMemo(() => {
+    const qq = search.trim().toLowerCase();
+    if (!qq) return employees;
+    return employees.filter((e) => {
+      const hay = `${e.fullName || ""} ${e.jobTitle || ""} ${e.departmentName || ""}`.toLowerCase();
+      return hay.includes(qq);
+    });
+  }, [employees, search]);
+
   return (
     <ScrollView
       style={s.screen}
@@ -37,16 +50,24 @@ export default function TeamScreen() {
 
       {q.isLoading ? <Loading /> : null}
 
+      {q.data?.canManage !== false && employees.length > 0 ? (
+        <SearchBar value={search} onChangeText={setSearch} placeholder={t("common.search")} />
+      ) : null}
+
       {q.data && q.data.canManage === false ? (
         <Card>
           <EmptyState icon="users" title={t("team.noPermissions")} subtitle={t("team.noPermissionsHint")} />
         </Card>
-      ) : !q.data?.employees || q.data.employees.length === 0 ? (
+      ) : employees.length === 0 ? (
         <Card>
           <EmptyState icon="users" title={t("team.noMembers")} />
         </Card>
+      ) : filteredEmployees.length === 0 ? (
+        <Card>
+          <EmptyState icon="search" title={t("common.noResults")} />
+        </Card>
       ) : (
-        q.data.employees.map((e) => (
+        filteredEmployees.map((e) => (
           <Pressable key={e.id} onPress={() => router.push(`/employee/${e.id}`)}>
             <Card
               style={{

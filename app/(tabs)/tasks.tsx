@@ -1,14 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { AppAlert, useAppAlert } from "@/components/AppAlert";
 import { Badge, Card, EmptyState, Loading, SectionHeader, StatCard, styles as s, theme } from "@/components/UI";
+import { FilterChips } from "@/components/FilterChips";
+import { SearchBar } from "@/components/SearchBar";
 import { api } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import { useIsRTL } from "@/lib/i18n-direction";
 import { alignStart, writeDir } from "@/lib/layout";
+
+type TaskFilter = "all" | "open" | "in_progress" | "completed";
 
 type Task = {
   id: string;
@@ -83,6 +87,21 @@ export default function TasksScreen() {
   const open = tasks.filter((t) => t.status !== "done" && t.status !== "completed").length;
   const completed = tasks.filter((t) => t.status === "done" || t.status === "completed").length;
 
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<TaskFilter>("all");
+
+  const filteredTasks = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return tasks.filter((it) => {
+      if (filter === "open" && !(it.status === "open" || it.status === "overdue")) return false;
+      if (filter === "in_progress" && it.status !== "in_progress") return false;
+      if (filter === "completed" && it.status !== "done" && it.status !== "completed") return false;
+      if (!q) return true;
+      const hay = `${it.title || ""} ${it.description || ""}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }, [tasks, search, filter]);
+
   return (
     <ScrollView
       style={s.screen}
@@ -104,14 +123,34 @@ export default function TasksScreen() {
         <StatCard label={t("tasks.completed")} value={completed} icon="check-circle" tone="success" />
       </View>
 
+      {tasks.length > 0 ? (
+        <>
+          <SearchBar value={search} onChangeText={setSearch} placeholder={t("common.search")} />
+          <FilterChips<TaskFilter>
+            value={filter}
+            onChange={setFilter}
+            options={[
+              { value: "all", label: t("common.all") },
+              { value: "open", label: t("tasks.statusOpen") },
+              { value: "in_progress", label: t("tasks.statusInProgress") },
+              { value: "completed", label: t("tasks.statusCompleted") },
+            ]}
+          />
+        </>
+      ) : null}
+
       {q.isLoading ? (
         <Loading />
       ) : tasks.length === 0 ? (
         <Card>
           <EmptyState icon="check-square" title={t("tasks.empty")} subtitle={t("tasks.emptyHint")} />
         </Card>
+      ) : filteredTasks.length === 0 ? (
+        <Card>
+          <EmptyState icon="search" title={t("common.noResults")} />
+        </Card>
       ) : (
-        tasks.map((it) => {
+        filteredTasks.map((it) => {
           const sk = statusKey[it.status || ""];
           const pk = priorityKey[it.priority || ""];
           return (

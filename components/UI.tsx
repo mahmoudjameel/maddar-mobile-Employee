@@ -11,12 +11,73 @@ import {
   ViewProps,
 } from "react-native";
 import { useTranslation } from "react-i18next";
-import colors from "@/constants/colors";
+import colors, { Palette } from "@/constants/colors";
 import { useIsRTL } from "@/lib/i18n-direction";
 import { alignStart, writeDir } from "@/lib/layout";
 
-const c = colors.light;
 const R = colors.radius;
+
+let _activePalette: Palette = colors.light;
+
+function buildStyles(p: Palette) {
+  return StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: p.background,
+    },
+    scrollContent: {
+      padding: 16,
+      gap: 14,
+      paddingBottom: 40,
+    },
+    row: {
+      flexDirection: "row",
+      gap: 12,
+    },
+    rowRtl: {
+      flexDirection: "row-reverse",
+    },
+  });
+}
+
+let _activeStyles = buildStyles(_activePalette);
+
+// Public mutator used by the ThemeProvider to flip palettes at runtime.
+// Components must be re-mounted (key change in _layout) for the new style
+// objects to be picked up by inline `style={[s.screen, ...]}` arrays.
+export function _setActivePalette(p: Palette) {
+  _activePalette = p;
+  _activeStyles = buildStyles(p);
+}
+
+export function _getActivePalette(): Palette {
+  return _activePalette;
+}
+
+// Live `theme` object: every property access reads from the current palette.
+// Existing `theme.foreground` usages keep working without refactor.
+export const theme: Palette = new Proxy({} as Palette, {
+  get(_t, prop: string) {
+    return (_activePalette as any)[prop];
+  },
+  ownKeys() {
+    return Object.keys(_activePalette);
+  },
+  getOwnPropertyDescriptor() {
+    return { enumerable: true, configurable: true };
+  },
+}) as Palette;
+
+// Live `styles` object backing the StyleSheet, regenerated on palette change.
+export const styles = new Proxy({} as any, {
+  get(_t, prop: string) {
+    return (_activeStyles as any)[prop];
+  },
+}) as ReturnType<typeof buildStyles>;
+
+// All component reads of the palette go through the proxy `theme` object so
+// they automatically pick up the active palette on the next render pass.
+const c = theme;
 
 export function Card({ style, children, ...rest }: ViewProps) {
   return (
@@ -149,13 +210,15 @@ export function Button({
       : isSecondary
         ? c.secondary
         : "transparent";
-  const fg = isPrimary || isDestr
-    ? "#fff"
-    : isSecondary
-      ? c.secondaryForeground
-      : isOutline
-        ? c.foreground
-        : c.primary;
+  const fg = isPrimary
+    ? c.primaryForeground
+    : isDestr
+      ? c.destructiveForeground
+      : isSecondary
+        ? c.secondaryForeground
+        : isOutline
+          ? c.foreground
+          : c.primary;
   const borderColor = isOutline ? c.border : "transparent";
   const rtl = useIsRTL();
 
@@ -356,24 +419,3 @@ export function RTLText(props: React.ComponentProps<typeof Text>) {
     />
   );
 }
-
-export const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: c.background,
-  },
-  scrollContent: {
-    padding: 16,
-    gap: 14,
-    paddingBottom: 40,
-  },
-  row: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  rowRtl: {
-    flexDirection: "row-reverse",
-  },
-});
-
-export { c as theme };
