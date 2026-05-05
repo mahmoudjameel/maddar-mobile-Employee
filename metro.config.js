@@ -16,11 +16,19 @@ const config = getDefaultConfig(__dirname);
 
 // Work around pnpm nested resolution issue for React Native internal import.
 config.resolver = config.resolver || {};
-config.resolver.extraNodeModules = {
+const extraNodeModules = {
   ...(config.resolver.extraNodeModules || {}),
-  "@react-native/virtualized-lists": path.dirname(
-    require.resolve("@react-native/virtualized-lists/package.json"),
-  ),
 };
+
+try {
+  extraNodeModules["@react-native/virtualized-lists"] = path.dirname(
+    require.resolve("@react-native/virtualized-lists/package.json"),
+  );
+} catch {
+  // In some install layouts (e.g. non-pnpm hoisting), this package may not be
+  // resolvable from the app root. Metro can still resolve it transitively.
+}
+
+config.resolver.extraNodeModules = extraNodeModules;
 
 module.exports = config;

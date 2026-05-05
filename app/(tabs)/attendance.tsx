@@ -1,7 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
-import * as Location from "expo-location";
 import React, { useMemo, useState } from "react";
 import { Platform, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -12,6 +11,7 @@ import { api } from "@/lib/api";
 import { formatTime } from "@/lib/format";
 import { useIsRTL } from "@/lib/i18n-direction";
 import { alignStart, writeDir } from "@/lib/layout";
+import { getOptionalCurrentCoordinates } from "@/lib/location";
 
 type AttendanceDay = {
   date: string;
@@ -79,28 +79,15 @@ export default function AttendanceScreen() {
 
   const punch = useMutation({
     mutationFn: async () => {
-      let lat: number | undefined;
-      let lng: number | undefined;
-      if (Platform.OS !== "web") {
-        const perm = await Location.requestForegroundPermissionsAsync();
-        if (perm.status === "granted") {
-          const loc = await Location.getCurrentPositionAsync({});
-          lat = loc.coords.latitude;
-          lng = loc.coords.longitude;
-        }
-      } else if (typeof navigator !== "undefined" && navigator.geolocation) {
-        await new Promise<void>((resolve) => {
-          navigator.geolocation.getCurrentPosition(
-            (p) => {
-              lat = p.coords.latitude;
-              lng = p.coords.longitude;
-              resolve();
-            },
-            () => resolve(),
-            { timeout: 4000 },
-          );
-        });
+      const coords = await getOptionalCurrentCoordinates();
+      if (!coords) {
+        // Avoid surfacing raw CoreLocation errors; show a clear UX message instead.
+        throw new Error("LOCATION_NOT_AVAILABLE");
       }
+
+      const lat = coords.latitude;
+      const lng = coords.longitude;
+
       const r = await api.post<{ action: string; recordedAt: string; message: string }>(
         "/api/employee/attendance",
         {
@@ -120,7 +107,11 @@ export default function AttendanceScreen() {
     },
     onError: (e: any) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      showAlert(t("attendance.checkInError"), e?.message || t("newRequest.errorMsg"));
+      const msg =
+        e?.message === "LOCATION_NOT_AVAILABLE"
+          ? t("attendance.locationRequired")
+          : e?.message || t("newRequest.errorMsg");
+      showAlert(t("attendance.checkInError"), msg);
     },
   });
 

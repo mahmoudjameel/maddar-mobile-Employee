@@ -5,6 +5,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { Appearance, ColorSchemeName } from "react-native";
@@ -35,6 +36,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     Appearance.getColorScheme(),
   );
   const [hydrated, setHydrated] = useState(false);
+  const lastPaletteRef = useRef<Palette | null>(null);
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
@@ -56,10 +58,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const resolved = useMemo(() => resolveMode(mode, systemScheme), [mode, systemScheme]);
   const palette = resolved === "dark" ? colors.dark : colors.light;
 
-  // Push palette changes into the UI module so theme/styles proxies update.
-  useEffect(() => {
+  // Push palette changes into the UI module so `theme`/`styles` proxies return
+  // the correct values during the same render pass.
+  if (hydrated && lastPaletteRef.current !== palette) {
     _setActivePalette(palette);
-  }, [palette]);
+    lastPaletteRef.current = palette;
+  }
 
   const setMode = useCallback(async (m: ThemeMode) => {
     setModeState(m);

@@ -37,6 +37,7 @@ function RootLayoutNav() {
   const { t } = useTranslation();
   const rtl = useIsRTL();
   const router = useRouter();
+  const { palette } = useThemeMode();
 
   return (
     <Stack
@@ -44,6 +45,9 @@ function RootLayoutNav() {
         headerBackTitle: rtl ? undefined : t("common.back"),
         headerBackVisible: !rtl,
         headerTintColor: theme.primary,
+        headerStyle: {
+          backgroundColor: palette.background,
+        },
         headerTitleAlign: "center",
         headerTitleStyle: { fontFamily: "Inter_600SemiBold" },
         ...(rtl
@@ -145,7 +149,7 @@ function ThemedShell() {
         translucent={false}
       />
       <View key={resolved} style={{ flex: 1, backgroundColor: palette.background }}>
-        <RootLayoutNav />
+        <RootLayoutNav key={resolved} />
       </View>
     </>
   );
